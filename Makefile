@@ -1,23 +1,15 @@
-.PHONY: build image nspawn service install uninstall reinstall
+.PHONY: build install uninstall reinstall
 
-NAME?=dev
-PROFILE?=bookworm
+name?=dev
+profile?=bookworm
 
-build: image nspawn service
-
-image:
-	./make.sh image $(NAME) $(PROFILE)
-
-nspawn:
-	./make.sh nspawn $(NAME)
-
-service:
-	./make.sh service $(NAME)
+build:
+	./make.sh build $(name) $(profile)
 
 install:
-	./make.sh install $(NAME)
+	./make.sh install $(name)
 
 uninstall:
-	./make.sh uninstall $(NAME)
+	./make.sh uninstall $(name)
 
 reinstall: uninstall install
