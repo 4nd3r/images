@@ -1,5 +1,15 @@
 #!/bin/sh -e
 
+_root()
+(
+    if [ -n "$RUN0" ]
+    then
+        run0 "$@"
+    else
+        sudo "$@"
+    fi
+)
+
 _make_sysusers()
 (
     printf 'g %s %s\n' "$_group" "$_gid"
@@ -43,22 +53,17 @@ _make_service()
     echo 'DeviceAllow='
 )
 
-_root()
-(
-    if [ -n "$RUN0" ]
-    then
-        run0 "$@"
-    else
-        sudo "$@"
-    fi
-)
-
 _make_build()
 (
     test -n "$1"
     mkdir -vp "$( dirname "$_sysusers" )"
     _make_sysusers > "$_sysusers"
-    mkosi -f --debug-shell --image-id "$_name" --profile "$1"
+    mkosi -f --debug-shell --image-id "$_name" --profile "$@"
+)
+
+_make_summary()
+(
+    _make_build "$@" summary
 )
 
 _make_install()
