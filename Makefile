@@ -1,7 +1,7 @@
 .PHONY: build summary install uninstall reinstall
 
 image?=dev
-profile?=dev
+profile?=$(image)
 machine?=$(image)
 
 build:
