@@ -2,12 +2,7 @@
 
 _root()
 (
-    if [ -n "$RUN0" ]
-    then
-        run0 "$@"
-    else
-        sudo "$@"
-    fi
+    sudo "$@"
 )
 
 _make_sysusers()
