@@ -1,4 +1,4 @@
-#!/bin/sh -e
+#!/bin/sh -eu
 
 _root()
 (
@@ -12,23 +12,39 @@ _root()
 
 _make_sysusers()
 (
+    _uid="$( id -u )"
+    _gid="$( id -g )"
+    _group="$( id -gn )"
     printf 'g %s %s\n' "$_group" "$_gid"
-    printf 'u %s %s:%s %s %s /bin/bash\n' "$_user" "$_uid" "$_gid" "$_user" "$_home"
-    printf 'm %s sudo\n' "$_user"
+    printf 'u %s %s:%s %s %s /bin/bash\n' "$USER" "$_uid" "$_gid" "$USER" "$HOME"
+    printf 'm %s sudo\n' "$USER"
+)
+
+_make_build()
+(
+    _sysusers='mkosi.extra/etc/sysusers.d/extra.conf'
+    mkdir -vp "$( dirname "$_sysusers" )"
+    _make_sysusers > "$_sysusers"
+    mkosi -f --debug-shell --image-id "$_image" --profile "$_profile" "$@"
+)
+
+_make_summary()
+(
+    _make_build "$@" summary
 )
 
 _make_nspawn()
 (
     echo '[Files]'
     for _ in \
-        "Bind=$_bind:$_home" \
-        "Bind=$_home/.kube" \
-        "Bind=$_home/Desktop" \
-        "Bind=$_home/Downloads" \
-        "Bind=$_home/Repos" \
-        "BindReadOnly=$_home/.bashrc" \
-        "BindReadOnly=$_home/.profile" \
-        "BindReadOnly=$_home/.tmux.conf"
+        "Bind=$_bind:$HOME" \
+        "Bind=$HOME/.kube" \
+        "Bind=$HOME/Desktop" \
+        "Bind=$HOME/Downloads" \
+        "Bind=$HOME/Repos" \
+        "BindReadOnly=$HOME/.bashrc" \
+        "BindReadOnly=$HOME/.profile" \
+        "BindReadOnly=$HOME/.tmux.conf"
     do
         if [ -e "$( echo "$_" | cut -d= -f2 | sed 's/:.*//' )" ]
         then
@@ -53,19 +69,6 @@ _make_service()
     echo 'DeviceAllow='
 )
 
-_make_build()
-(
-    test -n "$1"
-    mkdir -vp "$( dirname "$_sysusers" )"
-    _make_sysusers > "$_sysusers"
-    mkosi -f --debug-shell --image-id "$_name" --profile "$@"
-)
-
-_make_summary()
-(
-    _make_build "$@" summary
-)
-
 _make_install()
 (
     mkdir -vp "$_bind"
@@ -73,16 +76,16 @@ _make_install()
     _make_nspawn | _root tee "$_nspawn" > /dev/null
     _root mkdir -vp "$( dirname "$_service" )"
     _make_service | _root tee "$_service" > /dev/null
-    _root importctl -m import-tar "$_image" "$_name"
+    _root importctl -m import-tar "mkosi.output/$_image.tar" "$_machine"
     _root systemctl daemon-reload
-    _root machinectl start "$_name"
+    _root machinectl start "$_machine"
 )
 
 _make_uninstall()
 (
-    _root machinectl terminate "$_name"
+    _root machinectl terminate "$_machine"
     sleep 3
-    _root machinectl remove "$_name"
+    _root machinectl remove "$_machine"
     _root rm -vrf "$_nspawn" "$( dirname "$_service" )"
     _root systemctl daemon-reload
 )
@@ -90,17 +93,18 @@ _make_uninstall()
 if [ -n "$1" ] && [ -n "$2" ]
 then
     _make="$1"
-    _name="$2"
-    shift 2
-    _uid="$( id -u )"
-    _user="$USER"
-    _gid="$( id -g )"
-    _group="$( id -gn )"
-    _home="$HOME"
-    _image="mkosi.output/$_name.tar"
-    _sysusers='mkosi.extra/etc/sysusers.d/extra.conf'
-    _bind="$_home/.nspawn/$_name"
-    _nspawn="/etc/systemd/nspawn/$_name.nspawn"
-    _service="/etc/systemd/system/systemd-nspawn@$_name.service.d/extra.conf"
+    _image="$2"
+    case "$_make" in
+        build|summary)
+            _profile="$3"
+        ;;
+        install|uninstall)
+            _machine="$3"
+            _bind="$HOME/.nspawn/$_machine"
+            _nspawn="/etc/systemd/nspawn/$_machine.nspawn"
+            _service="/etc/systemd/system/systemd-nspawn@$_machine.service.d/extra.conf"
+        ;;
+    esac
+    shift 3
     "_make_$_make" "$@"
 fi

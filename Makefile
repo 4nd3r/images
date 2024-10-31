@@ -1,18 +1,19 @@
 .PHONY: build summary install uninstall reinstall
 
-name?=test
-profile?=bookworm
+image?=dev
+profile?=dev
+machine?=$(image)
 
 build:
-	./make.sh build $(name) $(profile)
+	./make.sh build $(image) $(profile)
 
 summary:
-	./make.sh summary $(name) $(profile)
+	./make.sh summary $(image) $(profile)
 
 install:
-	./make.sh install $(name)
+	./make.sh install $(image) $(machine)
 
 uninstall:
-	./make.sh uninstall $(name)
+	./make.sh uninstall $(image) $(machine)
 
 reinstall: uninstall install
