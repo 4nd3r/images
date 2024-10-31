@@ -1,14 +1,13 @@
 .PHONY: build summary install uninstall reinstall
 
 image?=dev
-profile?=$(image)
 machine?=$(image)
 
 build:
-	./make.sh build $(image) $(profile)
+	./make.sh build $(image)
 
 summary:
-	./make.sh summary $(image) $(profile)
+	./make.sh summary $(image)
 
 install:
 	./make.sh install $(image) $(machine)

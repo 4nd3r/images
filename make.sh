@@ -1,5 +1,10 @@
 #!/bin/sh -eu
 
+_mkosi()
+(
+    mkosi -f --debug-shell --image-id "$_image" "$@"
+)
+
 _root()
 (
     sudo "$@"
@@ -20,18 +25,18 @@ _make_build()
     _sysusers='mkosi.extra/etc/sysusers.d/extra.conf'
     mkdir -vp "$( dirname "$_sysusers" )"
     _make_sysusers > "$_sysusers"
-    mkosi -f --debug-shell --image-id "$_image" --profile "$_profile" "$@"
+    _mkosi
 )
 
 _make_summary()
 (
-    _make_build "$@" summary
+    _mkosi summary
 )
 
 _make_nspawn()
 (
     echo '[Files]'
-    for _ in \
+    for l in \
         "Bind=$_bind:$HOME" \
         "Bind=$HOME/.kube" \
         "Bind=$HOME/Desktop" \
@@ -41,9 +46,9 @@ _make_nspawn()
         "BindReadOnly=$HOME/.profile" \
         "BindReadOnly=$HOME/.tmux.conf"
     do
-        if [ -e "$( echo "$_" | cut -d= -f2 | sed 's/:.*//' )" ]
+        if [ -e "$( echo "$l" | cut -d= -f2 | sed 's/:.*//' )" ]
         then
-            echo "$_"
+            echo "$l"
         fi
     done
     echo ''
@@ -90,9 +95,6 @@ then
     _make="$1"
     _image="$2"
     case "$_make" in
-        build|summary)
-            _profile="$3"
-        ;;
         install|uninstall)
             _machine="$3"
             _bind="$HOME/.nspawn/$_machine"
@@ -100,6 +102,5 @@ then
             _service="/etc/systemd/system/systemd-nspawn@$_machine.service.d/extra.conf"
         ;;
     esac
-    shift 3
-    "_make_$_make" "$@"
+    "_make_$_make"
 fi
