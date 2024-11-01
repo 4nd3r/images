@@ -1,0 +1,9 @@
+#!/bin/sh -e
+
+_sysusers='/etc/sysusers.d/extra.conf'
+
+if [ -f "$_sysusers" ]
+then
+    _user="$( awk '/^u/ {print $2}' "$_sysusers" )"
+    echo "m $_user docker" >> "$_sysusers"
+fi
