@@ -1,4 +1,4 @@
-.PHONY: build summary install uninstall reinstall
+.PHONY: build info install uninstall reinstall
 
 image?=dev
 machine?=$(image)
@@ -6,8 +6,8 @@ machine?=$(image)
 build:
 	./make.sh build $(image)
 
-summary:
-	./make.sh summary $(image)
+info:
+	./make.sh info $(image)
 
 install:
 	./make.sh install $(image) $(machine)

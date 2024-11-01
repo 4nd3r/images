@@ -28,9 +28,10 @@ _make_build()
     _mkosi
 )
 
-_make_summary()
+_make_info()
 (
     _mkosi summary
+    _mkosi cat-config
 )
 
 _make_nspawn()
